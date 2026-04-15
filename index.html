@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur Fiscal Entreprise | Groupe GC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ─────────────────────────────────────────────
+   VARIABLES
+───────────────────────────────────────────── */
+:root {
+  --navy:        #08172E;
+  --navy-2:      #0E2040;
+  --navy-3:      #162B52;
+  --gold:        #C8A84B;
+  --gold-lt:     #E4C97A;
+  --gold-dim:    rgba(200,168,75,0.15);
+  --emerald:     #00C896;
+  --emerald-dk:  #009E76;
+  --red-warn:    #FF6B6B;
+  --white:       #F5F7FA;
+  --muted:       #8A9BB8;
+  --muted-lt:    #B2BFDA;
+  --border:      rgba(255,255,255,0.08);
+  --border-gold: rgba(200,168,75,0.3);
+  --r:           14px;
+  --shadow:      0 32px 80px rgba(0,0,0,0.55);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 28px 16px 60px;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(200,168,75,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 85% 90%, rgba(0,200,150,0.05) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px);
+}
+
+/* ─────────────────────────────────────────────
+   CARD
+───────────────────────────────────────────── */
+.card {
+  width: 100%;
+  max-width: 660px;
+  background: linear-gradient(160deg, var(--navy-2) 0%, var(--navy-3) 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: 22px;
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow: hidden;
+  position: relative;
+}
+
+.card-gold-line {
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-lt) 50%, var(--gold) 70%, transparent 100%);
+}
+
+.card-body { padding: 40px 44px 52px; }
+
+/* ─────────────────────────────────────────────
+   HEADER
+───────────────────────────────────────────── */
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--gold-dim);
+  border: 1px solid var(--border-gold);
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-lt);
+  margin-bottom: 16px;
+}
+
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(0.7)}
+}
+
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(22px, 4.5vw, 30px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+
+.card-sub {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ─────────────────────────────────────────────
+   PROGRESS
+───────────────────────────────────────────── */
+.prog-wrap { margin-bottom: 30px; }
+
+.prog-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.prog-track {
+  height: 3px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+  border-radius: 100px;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* Step dots */
+.step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  transition: all 0.3s;
+}
+
+.dot.done { background: var(--gold); }
+.dot.active { background: var(--gold-lt); width: 16px; border-radius: 3px; }
+
+/* ─────────────────────────────────────────────
+   STEPS
+───────────────────────────────────────────── */
+.step { display: none; }
+.step.active { display: block; animation: slideIn .3s ease; }
+
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(16px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity:0; transform:translateX(-16px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+.step-back-anim { animation: slideInLeft .3s ease; }
+
+.q-num {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.q-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(18px, 3.5vw, 23px);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.3;
+  margin-bottom: 22px;
+}
+
+/* ─────────────────────────────────────────────
+   CHOICE BUTTONS
+───────────────────────────────────────────── */
+.choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; }
+.choices-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 26px; }
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: rgba(255,255,255,0.03);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--white);
+  text-align: left;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.choice:hover {
+  background: var(--gold-dim);
+  border-color: var(--border-gold);
+  transform: translateX(3px);
+}
+
+.choice.sel {
+  background: rgba(200,168,75,0.12);
+  border-color: var(--gold);
+  color: var(--gold-lt);
+}
+
+.choice-icon {
+  width: 30px; height: 30px; flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.choice.sel .choice-icon {
+  background: var(--gold);
+  color: var(--navy);
+}
+
+.choice-info {}
+.choice-title { font-weight: 600; font-size: 14px; line-height: 1.3; }
+.choice-desc  { font-size: 11.5px; color: var(--muted); font-weight: 400; margin-top: 2px; line-height: 1.4; }
+.choice.sel .choice-desc { color: rgba(228,201,122,0.65); }
+
+/* Number choices (actionnaires, employés) */
+.num-choices {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.num-btn {
+  flex: 1;
+  min-width: 56px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 8px;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--muted-lt);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.num-btn:hover { border-color: var(--border-gold); color: var(--gold-lt); background: var(--gold-dim); }
+.num-btn.sel   { border-color: var(--gold); background: rgba(200,168,75,0.15); color: var(--gold-lt); }
+
+/* ─────────────────────────────────────────────
+   SLIDER
+───────────────────────────────────────────── */
+.slider-wrap { margin-bottom: 26px; }
+
+.slider-display {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.slider-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 7vw, 46px);
+  font-weight: 700;
+  color: var(--gold-lt);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.slider-unit { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.1);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+  box-shadow: 0 3px 12px rgba(200,168,75,0.5);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+input[type="range"]::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+  border: none;
+  cursor: pointer;
+}
+
+.slider-labs { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:8px; }
+
+.input-row {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 0 14px;
+  margin-top: 14px;
+  transition: border-color 0.2s;
+}
+.input-row:focus-within { border-color: var(--border-gold); }
+.input-prefix { font-size: 15px; color: var(--muted); margin-right: 6px; font-weight: 500; }
+.manual-inp {
+  background: transparent; border: none; outline: none;
+  color: var(--white); font-size: 15px; font-family: 'Outfit', sans-serif;
+  font-weight: 500; width: 100%; padding: 13px 0;
+}
+.manual-inp::placeholder { color: var(--muted); }
+
+/* ─────────────────────────────────────────────
+   NAV BUTTONS
+───────────────────────────────────────────── */
+.nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  color: var(--muted);
+  border-radius: var(--r);
+  padding: 0 18px;
+  height: 50px;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-back:hover { border-color: rgba(255,255,255,0.25); color: var(--white); }
+
+.btn-next {
+  flex: 1;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lt) 100%);
+  border: none;
+  border-radius: var(--r);
+  height: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  color: var(--navy);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 24px rgba(200,168,75,0.3);
+}
+
+.btn-next:hover   { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(200,168,75,0.4); }
+.btn-next:active  { transform: none; }
+.btn-next:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+
+/* ─────────────────────────────────────────────
+   RESULT SCREEN
+───────────────────────────────────────────── */
+#step-result { display: none; }
+#step-result.active { display: block; animation: slideIn .4s ease; }
+
+.result-eyebrow {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.result-headline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(18px, 3.5vw, 22px);
+  text-align: center;
+  color: var(--muted-lt);
+  line-height: 1.4;
+  margin-bottom: 26px;
+  padding: 0 10px;
+}
+
+/* ── BLURRED AMOUNT BOX ── */
+.blur-box {
+  background: linear-gradient(145deg, rgba(200,168,75,0.08), rgba(200,168,75,0.04));
+  border: 1.5px solid var(--border-gold);
+  border-radius: 18px;
+  padding: 32px 24px;
+  text-align: center;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.blur-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(200,168,75,0.12) 0%, transparent 70%);
+}
+
+.blur-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 10px; }
+
+.blur-amount-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.blur-currency {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.blur-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 7vw, 52px);
+  font-weight: 700;
+  color: var(--gold-lt);
+  letter-spacing: -1px;
+  line-height: 1;
+  filter: blur(10px);
+  user-select: none;
+  transition: filter 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.blur-amount.revealed { filter: blur(0); }
+
+.blur-sublabel {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Lock overlay */
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to top, rgba(14,32,64,0.96) 0%, rgba(14,32,64,0.6) 60%, transparent 100%);
+  border-radius: 17px;
+  transition: opacity 0.5s ease;
+}
+
+.lock-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.lock-icon { font-size: 28px; margin-bottom: 8px; }
+.lock-text { font-size: 13px; color: var(--muted-lt); font-weight: 500; text-align: center; line-height: 1.5; }
+
+/* ── LEAD FORM (inside result) ── */
+.lead-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 26px 24px;
+  margin-bottom: 22px;
+}
+
+.lead-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 5px;
+}
+
+.lead-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.55; }
+
+.form-grid { display: flex; flex-direction: column; gap: 12px; }
+
+.field-wrap {}
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field-inp {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 13px 16px;
+  color: var(--white);
+  font-size: 15px;
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.field-inp:focus { border-color: var(--border-gold); background: rgba(255,255,255,0.07); }
+.field-inp::placeholder { color: var(--muted); }
+.field-inp.error { border-color: var(--red-warn); }
+
+.btn-reveal {
+  width: 100%;
+  background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dk) 100%);
+  border: none;
+  border-radius: var(--r);
+  height: 56px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 14px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 28px rgba(0,200,150,0.3);
+  letter-spacing: 0.2px;
+}
+.btn-reveal:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,200,150,0.4); }
+.btn-reveal:active { transform: none; }
+
+.privacy { text-align:center; font-size:11px; color:var(--muted); margin-top:10px; display:flex; align-items:center; justify-content:center; gap:5px; }
+
+/* ── BREAKDOWN (revealed after form) ── */
+.breakdown-section {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s;
+  pointer-events: none;
+}
+
+.breakdown-section.visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: all;
+}
+
+.breakdown-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.breakdown-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  color: var(--white);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.breakdown-sub { font-size: 12px; color: var(--muted); }
+
+.breakdown-items { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+
+.bd-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  animation: fadeUp 0.5s ease both;
+}
+
+.bd-item:nth-child(1) { animation-delay: 0.1s; }
+.bd-item:nth-child(2) { animation-delay: 0.22s; }
+.bd-item:nth-child(3) { animation-delay: 0.34s; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(12px); }
+  to   { opacity:1; transform: none; }
+}
+
+.bd-num {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.bd-num-1 { background: rgba(200,168,75,0.15); color: var(--gold-lt); }
+.bd-num-2 { background: rgba(0,200,150,0.12); color: var(--emerald); }
+.bd-num-3 { background: rgba(130,100,230,0.15); color: #B8A0FF; }
+
+.bd-info { flex: 1; }
+.bd-name { font-size: 13.5px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+.bd-desc { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+
+.bd-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold-lt);
+  white-space: nowrap;
+}
+
+/* Total row */
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(200,168,75,0.12), rgba(200,168,75,0.06));
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  margin-bottom: 24px;
+}
+
+.total-label { font-size: 14px; font-weight: 600; color: var(--gold-lt); }
+.total-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold-lt);
+}
+
+/* Disclaimer */
+.disclaimer {
+  background: rgba(255,255,255,0.025);
+  border-left: 3px solid rgba(200,168,75,0.4);
+  border-radius: 0 10px 10px 0;
+  padding: 13px 15px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 26px;
+}
+
+/* ── CTA BUTTONS ── */
+.cta-section { display: flex; flex-direction: column; gap: 12px; }
+
+.btn-book {
+  width: 100%;
+  background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dk) 100%);
+  border: none;
+  border-radius: var(--r);
+  height: 58px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 28px rgba(0,200,150,0.3);
+  text-decoration: none;
+}
+
+.btn-book:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,200,150,0.4); }
+
+.btn-discover {
+  width: 100%;
+  background: transparent;
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--r);
+  height: 52px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  color: var(--gold-lt);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.btn-discover:hover { background: var(--gold-dim); }
+
+/* Trust badges */
+.trust-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ─────────────────────────────────────────────
+   SUCCESS SCREEN
+───────────────────────────────────────────── */
+#step-success { display: none; }
+#step-success.active { display: block; text-align: center; padding: 20px 0; animation: slideIn .4s ease; }
+
+.success-icon {
+  width: 70px; height: 70px;
+  background: rgba(0,200,150,0.12);
+  border: 2px solid rgba(0,200,150,0.4);
+  border-radius: 50%;
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+@keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+.success-title { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; margin-bottom:10px; }
+.success-sub { font-size:14px; color:var(--muted); line-height:1.65; max-width:340px; margin:0 auto; }
+
+/* ─────────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────────── */
+.card-footer {
+  text-align: center;
+  padding: 14px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ─────────────────────────────────────────────
+   MOBILE
+───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .card-body { padding: 28px 20px 40px; }
+  .choices-2col { grid-template-columns: 1fr; }
+  .num-choices { gap: 7px; }
+  .num-btn { padding: 11px 6px; font-size: 20px; }
+  .blur-amount { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ╔═══════════════════════════════════════╗
+     ║              CARD                    ║
+     ╚═══════════════════════════════════════╝ -->
+<div class="card">
+  <div class="card-gold-line"></div>
+  <div class="card-body">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="badge"><div class="badge-dot"></div> Groupe GC</div>
+      <h1 class="card-title">Combien payez-vous de trop en impôts?</h1>
+      <p class="card-sub">Répondez à 8 questions rapides — obtenez votre estimation fiscale personnalisée gratuitement.</p>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="prog-wrap" id="prog-wrap">
+      <div class="prog-meta">
+        <span id="prog-label">Étape 1 sur 8</span>
+        <span id="prog-pct">12%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="prog-fill" style="width:12%"></div>
+      </div>
+      <div class="step-dots" id="step-dots"></div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q1 — STATUT JURIDIQUE
+    ══════════════════════════════════ -->
+    <div class="step active" id="step-1">
+      <p class="q-num">Question 01 · 08</p>
+      <h2 class="q-label">Quel est le statut juridique de votre entreprise?</h2>
+
+      <div class="choices" id="q1-choices">
+        <button class="choice" onclick="pick('q1','autonome',this)">
+          <div class="choice-icon">A</div>
+          <div class="choice-info">
+            <div class="choice-title">Travailleur autonome (enregistré)</div>
+            <div class="choice-desc">Entreprise individuelle, NEQ personnel, pas d'incorporation</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q1','incorpore',this)">
+          <div class="choice-icon">B</div>
+          <div class="choice-info">
+            <div class="choice-title">Incorporé — Société par actions</div>
+            <div class="choice-desc">Vous opérez via une compagnie (Inc., Ltée, Cie)</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q1','cooperative',this)">
+          <div class="choice-icon">C</div>
+          <div class="choice-info">
+            <div class="choice-title">Coopérative</div>
+            <div class="choice-desc">Entité détenue collectivement par ses membres</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q1','senc',this)">
+          <div class="choice-icon">D</div>
+          <div class="choice-info">
+            <div class="choice-title">S.E.N.C.</div>
+            <div class="choice-desc">Société en Nom Collectif — partenariat sans personnalité morale distincte, responsabilité illimitée des associés</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="nav">
+        <button class="btn-next" id="btn1" disabled onclick="nextStep()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q2 — ACTIONNAIRES
+    ══════════════════════════════════ -->
+    <div class="step" id="step-2">
+      <p class="q-num">Question 02 · 08</p>
+      <h2 class="q-label">Combien y a-t-il d'actionnaires / associés dans votre entreprise?</h2>
+
+      <div class="num-choices" id="q2-choices">
+        <button class="num-btn" onclick="pickNum('q2','1',this)">1</button>
+        <button class="num-btn" onclick="pickNum('q2','2',this)">2</button>
+        <button class="num-btn" onclick="pickNum('q2','3',this)">3</button>
+        <button class="num-btn" onclick="pickNum('q2','4',this)">4</button>
+        <button class="num-btn" onclick="pickNum('q2','5+',this)">5+</button>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="prevStep()">← Retour</button>
+        <button class="btn-next" id="btn2" disabled onclick="nextStep()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q3 — SECTEUR D'ACTIVITÉ
+    ══════════════════════════════════ -->
+    <div class="step" id="step-3">
+      <p class="q-num">Question 03 · 08</p>
+      <h2 class="q-label">Quel est le secteur d'activité principal de votre entreprise?</h2>
+
+      <div class="choices" id="q3-choices">
+        <button class="choice" onclick="pick('q3','services_pro',this)">
+          <div class="choice-icon">💼</div>
+          <div class="choice-info">
+            <div class="choice-title">Services professionnels</div>
+            <div class="choice-desc">Consultation, comptabilité, droit, RH, marketing</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q3','construction',this)">
+          <div class="choice-icon">🏗️</div>
+          <div class="choice-info">
+            <div class="choice-title">Construction & Immobilier</div>
+            <div class="choice-desc">Entrepreneur général, sous-traitant, développement immobilier</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q3','tech',this)">
+          <div class="choice-icon">💻</div>
+          <div class="choice-info">
+            <div class="choice-title">Technologie & Numérique</div>
+            <div class="choice-desc">Logiciels, SaaS, agences web, TI, cybersécurité</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q3','commerce',this)">
+          <div class="choice-icon">🛒</div>
+          <div class="choice-info">
+            <div class="choice-title">Commerce de détail & E-commerce</div>
+            <div class="choice-desc">Vente au détail, distribution, boutique en ligne</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q3','sante',this)">
+          <div class="choice-icon">⚕️</div>
+          <div class="choice-info">
+            <div class="choice-title">Santé & Services médicaux</div>
+            <div class="choice-desc">Cliniques, praticiens, soins paramédicaux</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q3','transport',this)">
+          <div class="choice-icon">🚛</div>
+          <div class="choice-info">
+            <div class="choice-title">Transport & Logistique</div>
+            <div class="choice-desc">Camionnage, livraison, entreposage</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q3','agri',this)">
+          <div class="choice-icon">🌾</div>
+          <div class="choice-info">
+            <div class="choice-title">Agriculture & Agroalimentaire</div>
+            <div class="choice-desc">Production agricole, transformation alimentaire</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q3','autre',this)">
+          <div class="choice-icon">✦</div>
+          <div class="choice-info">
+            <div class="choice-title">Autre secteur</div>
+            <div class="choice-desc">Restauration, hôtellerie, fabrication, autre</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="prevStep()">← Retour</button>
+        <button class="btn-next" id="btn3" disabled onclick="nextStep()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q4 — NOMBRE D'EMPLOYÉS
+    ══════════════════════════════════ -->
+    <div class="step" id="step-4">
+      <p class="q-num">Question 04 · 08</p>
+      <h2 class="q-label">Combien d'employés compte votre entreprise?</h2>
+
+      <div class="choices" id="q4-choices">
+        <button class="choice" onclick="pick('q4','1-5',this)">
+          <div class="choice-icon">👤</div>
+          <div class="choice-info"><div class="choice-title">1 à 5 employés</div><div class="choice-desc">Vous et quelques collaborateurs proches</div></div>
+        </button>
+        <button class="choice" onclick="pick('q4','5-10',this)">
+          <div class="choice-icon">👥</div>
+          <div class="choice-info"><div class="choice-title">5 à 10 employés</div><div class="choice-desc">Petite équipe structurée</div></div>
+        </button>
+        <button class="choice" onclick="pick('q4','10-25',this)">
+          <div class="choice-icon">🏢</div>
+          <div class="choice-info"><div class="choice-title">10 à 25 employés</div><div class="choice-desc">PME en croissance</div></div>
+        </button>
+        <button class="choice" onclick="pick('q4','25-50',this)">
+          <div class="choice-icon">🏬</div>
+          <div class="choice-info"><div class="choice-title">25 à 50 employés</div><div class="choice-desc">Organisation bien établie</div></div>
+        </button>
+        <button class="choice" onclick="pick('q4','50+',this)">
+          <div class="choice-icon">🏭</div>
+          <div class="choice-info"><div class="choice-title">50+ employés</div><div class="choice-desc">Grande entreprise / multi-sites</div></div>
+        </button>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="prevStep()">← Retour</button>
+        <button class="btn-next" id="btn4" disabled onclick="nextStep()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q5 — CHIFFRE D'AFFAIRES
+    ══════════════════════════════════ -->
+    <div class="step" id="step-5">
+      <p class="q-num">Question 05 · 08</p>
+      <h2 class="q-label">Quel est votre chiffre d'affaires annuel approximatif?</h2>
+
+      <div class="slider-wrap">
+        <div class="slider-display">
+          <div class="slider-val" id="rev-disp">250 000 $</div>
+          <div class="slider-unit">revenus bruts annuels</div>
+        </div>
+        <input type="range" id="rev-sl" min="0" max="25000000" step="25000" value="250000"
+               oninput="slideUpdate('rev',this.value)">
+        <div class="slider-labs">
+          <span>0 $</span><span>6 M</span><span>12 M</span><span>18 M</span><span>25 M $</span>
+        </div>
+        <div class="input-row">
+          <span class="input-prefix">$</span>
+          <input type="number" class="manual-inp" id="rev-inp" placeholder="Montant précis..."
+                 min="0" max="25000000" oninput="inputSync('rev',this.value)">
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="prevStep()">← Retour</button>
+        <button class="btn-next" onclick="nextStep()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q6 — DÉPENSES
+    ══════════════════════════════════ -->
+    <div class="step" id="step-6">
+      <p class="q-num">Question 06 · 08</p>
+      <h2 class="q-label">Quelles sont vos dépenses d'exploitation annuelles?</h2>
+
+      <div class="slider-wrap">
+        <div class="slider-display">
+          <div class="slider-val" id="exp-disp">80 000 $</div>
+          <div class="slider-unit">dépenses totales (salaires, loyer, fournisseurs, etc.)</div>
+        </div>
+        <input type="range" id="exp-sl" min="0" max="15000000" step="25000" value="80000"
+               oninput="slideUpdate('exp',this.value)">
+        <div class="slider-labs">
+          <span>0 $</span><span>3,75 M</span><span>7,5 M</span><span>11 M</span><span>15 M $</span>
+        </div>
+        <div class="input-row">
+          <span class="input-prefix">$</span>
+          <input type="number" class="manual-inp" id="exp-inp" placeholder="Montant précis..."
+                 min="0" max="20000000" oninput="inputSync('exp',this.value)">
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="prevStep()">← Retour</button>
+        <button class="btn-next" onclick="nextStep()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q7 — MODE DE RÉMUNÉRATION
+    ══════════════════════════════════ -->
+    <div class="step" id="step-7">
+      <p class="q-num">Question 07 · 08</p>
+      <h2 class="q-label">Comment vous versez-vous un revenu personnel depuis votre entreprise?</h2>
+
+      <div class="choices" id="q7-choices">
+        <button class="choice" onclick="pick('q7','salaire',this)">
+          <div class="choice-icon">💵</div>
+          <div class="choice-info">
+            <div class="choice-title">Salaire seulement</div>
+            <div class="choice-desc">Vous recevez un salaire régulier via la paie</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q7','salaire_div',this)">
+          <div class="choice-icon">⚖️</div>
+          <div class="choice-info">
+            <div class="choice-title">Salaire + Dividendes</div>
+            <div class="choice-desc">Combinaison des deux pour optimiser la fiscalité</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q7','dividendes',this)">
+          <div class="choice-icon">📈</div>
+          <div class="choice-info">
+            <div class="choice-title">Dividendes seulement</div>
+            <div class="choice-desc">Vous vous versez uniquement des dividendes</div>
+          </div>
+        </button>
+        <button class="choice" onclick="pick('q7','autre',this)">
+          <div class="choice-icon">🔀</div>
+          <div class="choice-info">
+            <div class="choice-title">Autre structure de revenu</div>
+            <div class="choice-desc">Prêts d'actionnaire, remboursements, frais de gestion, etc.</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="prevStep()">← Retour</button>
+        <button class="btn-next" id="btn7" disabled onclick="nextStep()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Q8 — SALAIRE VERSÉ
+    ══════════════════════════════════ -->
+    <div class="step" id="step-8">
+      <p class="q-num">Question 08 · 08</p>
+      <h2 class="q-label">Quel montant de salaire vous versez-vous personnellement par année?</h2>
+
+      <div class="slider-wrap">
+        <div class="slider-display">
+          <div class="slider-val" id="sal-disp">80 000 $</div>
+          <div class="slider-unit">salaire personnel annuel brut</div>
+        </div>
+        <input type="range" id="sal-sl" min="0" max="500000" step="1000" value="80000"
+               oninput="slideUpdate('sal',this.value)">
+        <div class="slider-labs">
+          <span>0 $</span><span>125 k</span><span>250 k</span><span>375 k</span><span>500 k $</span>
+        </div>
+        <div class="input-row">
+          <span class="input-prefix">$</span>
+          <input type="number" class="manual-inp" id="sal-inp" placeholder="Montant précis..."
+                 min="0" max="1000000" oninput="inputSync('sal',this.value)">
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="prevStep()">← Retour</button>
+        <button class="btn-next" onclick="calculate()">Calculer mon impôt →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         RESULT SCREEN
+    ══════════════════════════════════ -->
+    <div id="step-result">
+
+      <p class="result-eyebrow">📊 Votre bilan fiscal estimé · 2025</p>
+      <p class="result-headline">Voici le total que vous payez<br><strong style="color:var(--white)">de trop en impôts cette année</strong></p>
+
+      <!-- BLURRED AMOUNT -->
+      <div class="blur-box">
+        <p class="blur-label">Économies fiscales potentielles</p>
+        <div style="margin-bottom:4px">
+          <span id="blur-amount-prefix" style="font-size:14px;font-weight:600;letter-spacing:1px;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:4px">Jusqu'à</span>
+        </div>
+        <div class="blur-amount-wrap">
+          <span class="blur-currency">$</span>
+          <span class="blur-amount" id="blur-amount">0</span>
+        </div>
+        <p class="blur-sublabel">d'économies fiscales potentielles · estimation approximative basée sur vos réponses</p>
+
+        <!-- Lock overlay -->
+        <div class="lock-overlay" id="lock-overlay">
+          <div class="lock-icon">🔒</div>
+          <p class="lock-text">Entrez vos coordonnées ci-dessous<br>pour révéler votre montant exact</p>
+        </div>
+      </div>
+
+      <!-- LEAD FORM -->
+      <div class="lead-card" id="lead-card">
+        <h3 class="lead-title">Révélez votre montant gratuitement</h3>
+        <p class="lead-sub">Un conseiller du Groupe GC vous contactera sous 24h pour vous présenter un plan d'optimisation personnalisé.</p>
+
+        <div class="form-grid">
+          <div class="field-wrap">
+            <label class="field-label">Prénom et nom</label>
+            <input type="text"  class="field-inp" id="f-name"  placeholder="Guillaume Tremblay" autocomplete="name">
+          </div>
+          <div class="field-wrap">
+            <label class="field-label">Adresse courriel</label>
+            <input type="email" class="field-inp" id="f-email" placeholder="guillaume@monentreprise.com" autocomplete="email">
+          </div>
+          <div class="field-wrap">
+            <label class="field-label">Numéro de téléphone</label>
+            <input type="tel"   class="field-inp" id="f-phone" placeholder="(514) 555-0123" autocomplete="tel">
+          </div>
+        </div>
+
+        <button class="btn-reveal" onclick="revealAmount()">
+          🔓 Révéler mon montant d'économies →
+        </button>
+
+        <p class="privacy">🔒 Vos informations sont confidentielles et ne seront jamais revendues</p>
+      </div>
+
+      <!-- BREAKDOWN (revealed) -->
+      <div class="breakdown-section" id="breakdown-section">
+
+        <div class="breakdown-header">
+          <h3 class="breakdown-title">Voici comment récupérer cet argent</h3>
+          <p class="breakdown-sub">Trois stratégies combinées · estimation approximative</p>
+        </div>
+
+        <div class="breakdown-items">
+          <div class="bd-item">
+            <div class="bd-num bd-num-1">1</div>
+            <div class="bd-info">
+              <div class="bd-name">Structure financière optimisée</div>
+              <div class="bd-desc">Holding familiale, gel successoral, fractionnement de revenus entre actionnaires</div>
+            </div>
+            <div class="bd-amount" id="bd-1">—</div>
+          </div>
+          <div class="bd-item">
+            <div class="bd-num bd-num-2">2</div>
+            <div class="bd-info">
+              <div class="bd-name">Régime corporatif</div>
+              <div class="bd-desc">REER collectif, IPP (Régime de retraite individuel), assurance-vie participante corporative</div>
+            </div>
+            <div class="bd-amount" id="bd-2">—</div>
+          </div>
+          <div class="bd-item">
+            <div class="bd-num bd-num-3">3</div>
+            <div class="bd-info">
+              <div class="bd-name">Stratégie fiscale avancée</div>
+              <div class="bd-desc">Exonération des gains en capital (971 190 $), retraite via société, compte de dividendes en capital</div>
+            </div>
+            <div class="bd-amount" id="bd-3">—</div>
+          </div>
+        </div>
+
+        <div class="total-row">
+          <span class="total-label">💰 Total des économies potentielles</span>
+          <span class="total-val">Jusqu'à <span id="total-saving-disp">—</span></span>
+        </div>
+
+        <div class="disclaimer">
+          ⚠️ Ce calcul est une estimation à des fins éducatives uniquement. Les montants réels varient selon votre situation, votre historique fiscal et les stratégies applicables. Ce résultat ne constitue pas un avis fiscal ou financier.
+        </div>
+
+        <!-- CTA BUTTONS -->
+        <div class="cta-section">
+          <!-- ── CONFIG : Remplacez les href par vos URLs ── -->
+          <a class="btn-book" href="VOTRE_URL_CALENDLY_OU_GHL_ICI" target="_blank" id="btn-book">
+            📅 Réserver ma consultation gratuite →
+          </a>
+          <a class="btn-discover" href="VOTRE_URL_PAGE_STRATEGIES_ICI" target="_blank" id="btn-discover">
+            💡 Découvrir les stratégies d'optimisation
+          </a>
+        </div>
+
+        <!-- Trust -->
+        <div class="trust-row">
+          <div class="trust-item">🔒 Confidentiel</div>
+          <div class="trust-item">✅ Sans engagement</div>
+          <div class="trust-item">⚡ Réponse sous 24h</div>
+          <div class="trust-item">🏛️ Groupe GC</div>
+        </div>
+
+        <!-- Restart -->
+        <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+          <button onclick="restartCalc()" style="background:transparent;border:none;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.color='var(--white)';this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.color='var(--muted)';this.style.background='transparent'">
+            🔄 Recommencer le calcul
+          </button>
+        </div>
+
+      </div><!-- /breakdown-section -->
+    </div><!-- /step-result -->
+
+    <!-- ══════════════════════════════════
+         SUCCESS SCREEN
+    ══════════════════════════════════ -->
+    <div id="step-success">
+      <div class="success-icon">✓</div>
+      <h3 class="success-title">Demande reçue !</h3>
+      <p class="success-sub">Merci. Un conseiller du Groupe GC vous contactera dans les 24 prochaines heures pour discuter de votre plan d'optimisation fiscal personnalisé.</p>
+    </div>
+
+  </div><!-- /card-body -->
+
+  <div class="card-footer" id="card-footer">
+    🔒 Calcul estimatif à des fins éducatives · Non-substitut à un avis professionnel · Groupe GC
+  </div>
+</div><!-- /card -->
+
+
+<!-- ╔═══════════════════════════════════════╗
+     ║           JAVASCRIPT ENGINE          ║
+     ╚═══════════════════════════════════════╝ -->
+<script>
+"use strict";
+
+/* ─────────────────────────────────────────
+   ⚙️  CONFIGURATION — À PERSONNALISER
+───────────────────────────────────────── */
+const CONFIG = {
+  GHL_WEBHOOK_URL: 'https://services.leadconnectorhq.com/hooks/efkpsCi88xsnw3sWiruZ/webhook-trigger/6b31c1c6-e3e2-4a97-80ef-78b16eec5357',
+  BOOKING_URL:     'https://api.leadconnectorhq.com/widget/booking/3vKcVsaLub3bwIqxJr1T',
+  STRATEGIES_URL:  'https://gc-entrepreneuriat.lovable.app',
+  WEBHOOK_ENABLED: true,
+};
+
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+const S = {
+  q1:       null,   // statut juridique
+  q2:       null,   // actionnaires
+  q3:       null,   // secteur
+  q4:       null,   // employés
+  q7:       null,   // rémunération
+  revenue:  250000,
+  expenses:  80000,
+  salary:    80000,
+};
+
+/* Step order: q1 === 'autonome' skips Q2 (actionnaires) */
+let stepOrder = [];
+let stepIdx   = 0;
+
+function buildStepOrder() {
+  if (S.q1 === 'autonome') {
+    stepOrder = [1, 3, 4, 5, 6, 7, 8];
+  } else {
+    stepOrder = [1, 2, 3, 4, 5, 6, 7, 8];
+  }
+}
+
+/* Init */
+buildStepOrder();
+
+/* ─────────────────────────────────────────
+   NAVIGATION
+───────────────────────────────────────── */
+function getStepEl(n) { return document.getElementById(`step-${n}`); }
+
+function activateStep(n, dir = 'fwd') {
+  // Hide all
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active','step-back-anim'));
+  const el = getStepEl(n);
+  if (!el) return;
+  el.classList.add('active');
+  if (dir === 'bwd') el.classList.add('step-back-anim');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() {
+  stepIdx = Math.min(stepIdx + 1, stepOrder.length - 1);
+  activateStep(stepOrder[stepIdx]);
+}
+
+function prevStep() {
+  stepIdx = Math.max(stepIdx - 1, 0);
+  activateStep(stepOrder[stepIdx], 'bwd');
+}
+
+function updateProgress() {
+  const total   = stepOrder.length;
+  const current = stepIdx + 1;
+  const pct     = Math.round((current / total) * 100);
+
+  document.getElementById('prog-label').textContent = `Étape ${current} sur ${total}`;
+  document.getElementById('prog-pct').textContent   = `${pct}%`;
+  document.getElementById('prog-fill').style.width  = `${pct}%`;
+
+  // Dots
+  const dotsEl = document.getElementById('step-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = `dot${i < stepIdx ? ' done' : i === stepIdx ? ' active' : ''}`;
+    dotsEl.appendChild(d);
+  }
+}
+
+/* ─────────────────────────────────────────
+   CHOICE PICKERS
+───────────────────────────────────────── */
+function pick(q, val, el) {
+  S[q] = val;
+  el.closest('[id$="-choices"]').querySelectorAll('.choice').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+
+  // Special: after Q1, rebuild step order
+  if (q === 'q1') {
+    buildStepOrder();
+    const btn = document.getElementById('btn1');
+    btn.disabled = false;
+  }
+
+  // Enable next for all choice-based questions
+  const btnMap = { q3:'btn3', q4:'btn4', q7:'btn7' };
+  if (btnMap[q]) {
+    const b = document.getElementById(btnMap[q]);
+    if (b) b.disabled = false;
+  }
+}
+
+function pickNum(q, val, el) {
+  S[q] = val;
+  el.closest('.num-choices').querySelectorAll('.num-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  if (q === 'q2') {
+    const b = document.getElementById('btn2');
+    if (b) b.disabled = false;
+  }
+}
+
+/* ─────────────────────────────────────────
+   SLIDERS
+───────────────────────────────────────── */
+function fmt(v) {
+  if (v >= 1000000) return (v / 1000000).toFixed(v % 1000000 === 0 ? 0 : 1) + ' M $';
+  if (v >= 1000)    return Math.round(v).toLocaleString('fr-CA') + ' $';
+  return v + ' $';
+}
+
+function slideUpdate(key, raw) {
+  const v = parseInt(raw) || 0;
+  S[{ rev: 'revenue', exp: 'expenses', sal: 'salary' }[key]] = v;
+  document.getElementById(`${key}-disp`).textContent = fmt(v);
+  document.getElementById(`${key}-inp`).value = v;
+  setSliderGrad(document.getElementById(`${key}-sl`), v,
+    key === 'rev' ? 25000000 : key === 'exp' ? 15000000 : 500000);
+}
+
+function inputSync(key, raw) {
+  const v = Math.max(0, parseInt(raw) || 0);
+  S[{ rev: 'revenue', exp: 'expenses', sal: 'salary' }[key]] = v;
+  const maxMap = { rev: 25000000, exp: 15000000, sal: 500000 };
+  document.getElementById(`${key}-sl`).value = Math.min(v, maxMap[key]);
+  document.getElementById(`${key}-disp`).textContent = fmt(v);
+  setSliderGrad(document.getElementById(`${key}-sl`), v, maxMap[key]);
+}
+
+function setSliderGrad(el, val, max) {
+  const p = Math.min((val / max) * 100, 100);
+  el.style.background = `linear-gradient(to right,var(--gold) ${p}%,rgba(255,255,255,0.1) ${p}%)`;
+}
+
+// Init slider gradients
+setSliderGrad(document.getElementById('rev-sl'), 250000, 25000000);
+setSliderGrad(document.getElementById('exp-sl'),  80000, 15000000);
+setSliderGrad(document.getElementById('sal-sl'),  80000, 500000);
+
+/* ─────────────────────────────────────────
+   TAX MATH — QUÉBEC 2025 (APPROX.)
+───────────────────────────────────────── */
+
+/** Impôt progressif personnel combiné Fédéral + Québec */
+function taxPersonal(income) {
+  if (income <= 0) return 0;
+  const brackets = [
+    [17000,    0.000],
+    [50000,    0.275],
+    [100000,   0.375],
+    [155000,   0.435],
+    [220000,   0.475],
+    [Infinity, 0.533],
+  ];
+  let tax = 0, prev = 0;
+  for (const [lim, rate] of brackets) {
+    const chunk = Math.min(income, lim) - prev;
+    if (chunk <= 0) break;
+    tax += chunk * rate;
+    prev = lim;
+    if (income <= lim) break;
+  }
+  return Math.max(0, tax);
+}
+
+/** Impôt corporatif — DAPE Québec/Fédéral combiné ~12.2% sur ≤500k */
+function taxCorp(profit) {
+  if (profit <= 0) return 0;
+  const DAPE = 500000;
+  return profit <= DAPE
+    ? profit * 0.122
+    : DAPE * 0.122 + (profit - DAPE) * 0.265;
+}
+
+/** Taux effectif dividendes ordinaires Québec après crédits ~38% */
+function taxDividends(div) {
+  return Math.max(0, div * 0.38);
+}
+
+/** Multiplicateur sectoriel — certains secteurs ont plus d'options d'optimisation */
+function sectorMultiplier() {
+  const m = {
+    sante: 1.15, services_pro: 1.10, tech: 1.08, agri: 1.12,
+    construction: 1.05, transport: 1.04, commerce: 1.02, autre: 1.00,
+  };
+  return m[S.q3] || 1.0;
+}
+
+/** Multiplicateur actionnaires — plus d'actionnaires = plus de fractionnement possible */
+function shareholderMultiplier() {
+  const m = { '1': 1.0, '2': 1.12, '3': 1.18, '4': 1.20, '5+': 1.22 };
+  return m[S.q2] || 1.0;
+}
+
+/* ─────────────────────────────────────────
+   CALCULATE
+───────────────────────────────────────── */
+function calculate() {
+  const rev    = S.revenue;
+  const exp    = S.expenses;
+  const profit = Math.max(0, rev - exp);
+  const sal    = S.salary || 0;
+  const q1     = S.q1 || 'autonome';
+
+  /* ─────────────────────────────────────────────────────────
+     FORMULE SELON STATUT JURIDIQUE
+
+     TRAVAILLEUR AUTONOME / S.E.N.C.
+     → Potentiel élevé : l'incorporation seule génère 20-35%
+     → Calcul : profit net × 20%
+
+     INCORPORÉ / COOPÉRATIVE
+     → Gains marginaux sur structure existante
+     → ① Salaire versé × 15%
+     → ② (Revenus - Dépenses) × 5%
+     → Total = ① + ②
+  ───────────────────────────────────────────────────────── */
+  let savings = 0;
+  let opt1 = 0, opt2 = 0, opt3 = 0;
+
+  if (q1 === 'autonome' || q1 === 'senc') {
+    savings = Math.round(profit * 0.20);
+    // Ventilation pour travailleur autonome :
+    // Bloc 1 = gain principal via incorporation
+    // Blocs 2 & 3 = optimisation supplémentaire
+    opt1 = Math.round(savings * 0.55);  // Structure (incorporation, holding)
+    opt2 = Math.round(savings * 0.28);  // Régime corporatif
+    opt3 = savings - opt1 - opt2;       // Stratégie fiscale
+
+  } else {
+    // Incorporé / Coopérative
+    const savingSalary = Math.round(sal    * 0.15);
+    const savingCorp   = Math.round(profit * 0.05);
+    savings = savingSalary + savingCorp;
+    opt1 = savingSalary;                        // Structure → lié au revenu perso
+    opt2 = Math.round(savingCorp * 0.60);       // Régime corporatif
+    opt3 = savingCorp - opt2;                   // Stratégie fiscale
+  }
+
+  /* ── Fourchette ±17% arrondie aux 500$ les plus proches ── */
+  const low  = Math.round(savings * 0.83 / 500) * 500;
+  const high = Math.round(savings * 1.17 / 500) * 500;
+
+  // Stocker
+  window._calc = { savings, low, high, opt1, opt2, opt3, profit, q1 };
+
+  // Préremplir les montants (floutés)
+  document.getElementById('blur-amount').innerHTML =
+    `${low.toLocaleString('fr-CA')}&thinsp;$&nbsp;—&nbsp;${high.toLocaleString('fr-CA')}&thinsp;$`;
+  document.getElementById('blur-amount-prefix').textContent = 'Entre';
+
+  document.getElementById('bd-1').textContent = opt1.toLocaleString('fr-CA') + ' $';
+  document.getElementById('bd-2').textContent = opt2.toLocaleString('fr-CA') + ' $';
+  document.getElementById('bd-3').textContent = opt3.toLocaleString('fr-CA') + ' $';
+  document.getElementById('total-saving-disp').textContent =
+    `${low.toLocaleString('fr-CA')} $ — ${high.toLocaleString('fr-CA')} $`;
+
+  // Update button URLs from config
+  document.getElementById('btn-book').href     = CONFIG.BOOKING_URL;
+  document.getElementById('btn-discover').href = CONFIG.STRATEGIES_URL;
+
+  // Switch to result screen
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-result').classList.add('active');
+  document.getElementById('prog-wrap').style.display = 'none';
+}
+
+/* ─────────────────────────────────────────
+   REVEAL AMOUNT (after lead form)
+───────────────────────────────────────── */
+function revealAmount() {
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+
+  // Validation
+  let ok = true;
+  [['f-name',name],['f-email',email],['f-phone',phone]].forEach(([id,val]) => {
+    const el = document.getElementById(id);
+    if (!val || (id==='f-email' && !val.includes('@'))) {
+      el.classList.add('error');
+      ok = false;
+    } else {
+      el.classList.remove('error');
+    }
+  });
+  if (!ok) return;
+
+  // ── ENVOI WEBHOOK GOHIGHLEVEL (form-urlencoded + no-cors) ──
+  if (CONFIG.WEBHOOK_ENABLED) {
+    try {
+      // Envoi en application/x-www-form-urlencoded + mode no-cors
+      // (no-cors ne retourne pas de réponse lisible, mais le webhook GHL reçoit bien les données)
+      const body = new URLSearchParams({
+        full_name:               name,
+        email:                   email,
+        phone:                   phone,
+        statut_juridique:        S.q1        || '',
+        actionnaires:            S.q2        || '',
+        secteur:                 S.q3        || '',
+        employes:                S.q4        || '',
+        mode_remuneration:       S.q7        || '',
+        chiffre_affaires:        String(S.revenue),
+        depenses:                String(S.expenses),
+        salaire_perso:           String(S.salary),
+        profit_net:              String(window._calc?.profit    || 0),
+        economies_low:           String(window._calc?.low       || 0),
+        economies_high:          String(window._calc?.high      || 0),
+        economies_structure:     String(window._calc?.opt1      || 0),
+        economies_regime_corp:   String(window._calc?.opt2      || 0),
+        economies_strategie_fx:  String(window._calc?.opt3      || 0),
+        source:                  'calculateur-fiscal-gc',
+        date_soumission:         new Date().toISOString(),
+      });
+
+      fetch(CONFIG.GHL_WEBHOOK_URL, {
+        method: 'POST',
+        mode:   'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:   body.toString(),
+      });
+      // no-cors : pas de .then() — la requête part en fire-and-forget
+    } catch (err) {
+      console.warn('Webhook GHL — erreur:', err);
+    }
+  }
+
+  // ── ANIMATION DE RÉVÉLATION ──
+  const blurEl = document.getElementById('blur-amount');
+  const lockEl = document.getElementById('lock-overlay');
+  const leadCard = document.getElementById('lead-card');
+
+  // Fade out lock overlay
+  lockEl.classList.add('hidden');
+  setTimeout(() => lockEl.style.display = 'none', 500);
+
+  // Remove blur — range display, no counter needed
+  blurEl.classList.add('revealed');
+
+  // Also update the total row (already set, just ensure)
+  const { low, high, savings } = window._calc;
+  document.getElementById('total-saving-disp').textContent =
+    `${low.toLocaleString('fr-CA')} $ — ${high.toLocaleString('fr-CA')} $`;
+
+  // Collapse and hide lead form
+  leadCard.style.transition = 'all 0.4s ease';
+  leadCard.style.maxHeight  = leadCard.scrollHeight + 'px';
+  requestAnimationFrame(() => {
+    leadCard.style.maxHeight  = '0';
+    leadCard.style.opacity    = '0';
+    leadCard.style.overflow   = 'hidden';
+    leadCard.style.marginBottom = '0';
+    leadCard.style.padding    = '0';
+  });
+
+  // Show breakdown
+  setTimeout(() => {
+    const bd = document.getElementById('breakdown-section');
+    bd.classList.add('visible');
+    bd.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 600);
+}
+
+/* ─────────────────────────────────────────
+   COUNTER ANIMATION
+───────────────────────────────────────── */
+function animateCounter(el, target, duration) {
+  const steps = 70;
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  let step = 0;
+
+  const iv = setInterval(() => {
+    step++;
+    const progress = easeOut(step / steps);
+    const val = Math.round(target * progress);
+    el.textContent = val.toLocaleString('fr-CA');
+    if (step >= steps) {
+      clearInterval(iv);
+      el.textContent = target.toLocaleString('fr-CA');
+    }
+  }, duration / steps);
+}
+
+/* ─────────────────────────────────────────
+   RESTART
+───────────────────────────────────────── */
+function restartCalc() {
+  // Reset state
+  Object.assign(S, { q1:null, q2:null, q3:null, q4:null, q7:null,
+                     revenue:250000, expenses:80000, salary:80000 });
+  window._calc = null;
+  stepIdx = 0;
+  buildStepOrder();
+
+  // Reset all choice buttons
+  document.querySelectorAll('.choice, .num-btn').forEach(b => b.classList.remove('sel'));
+
+  // Reset sliders & displays
+  document.getElementById('rev-sl').value = 250000;
+  document.getElementById('exp-sl').value = 80000;
+  document.getElementById('sal-sl').value = 80000;
+  ['rev','exp','sal'].forEach(k => {
+    const maxMap = { rev:25000000, exp:15000000, sal:500000 };
+    const valMap = { rev:250000,   exp:80000,    sal:80000  };
+    document.getElementById(`${k}-disp`).textContent = fmt(valMap[k]);
+    document.getElementById(`${k}-inp`).value = '';
+    setSliderGrad(document.getElementById(`${k}-sl`), valMap[k], maxMap[k]);
+  });
+
+  // Reset next buttons
+  ['btn1','btn2','btn3','btn4','btn7'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) { b.disabled = true; b.style.opacity = '0.35'; }
+  });
+
+  // Reset form fields
+  ['f-name','f-email','f-phone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('error'); }
+  });
+
+  // Reset blur box
+  const blurEl = document.getElementById('blur-amount');
+  blurEl.textContent = '0';
+  blurEl.classList.remove('revealed');
+  const lockEl = document.getElementById('lock-overlay');
+  lockEl.style.display = '';
+  lockEl.classList.remove('hidden');
+
+  // Reset lead card visibility
+  const lc = document.getElementById('lead-card');
+  lc.style.cssText = '';
+
+  // Hide breakdown
+  document.getElementById('breakdown-section').classList.remove('visible');
+
+  // Hide result & success, show step 1
+  document.getElementById('step-result').classList.remove('active');
+  document.getElementById('step-success').classList.remove('active');
+  document.getElementById('prog-wrap').style.display = 'block';
+
+  // Activate first step with animation
+  activateStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* Init progress display */
+updateProgress();
+</script>
+
+</body>
+</html>
