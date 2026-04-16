@@ -1178,7 +1178,7 @@ input[type="range"]::-moz-range-thumb {
         <div class="form-grid">
           <div class="field-wrap">
             <label class="field-label">Prénom et nom</label>
-            <input type="text"  class="field-inp" id="f-name"  placeholder="Guillaume Tremblay" autocomplete="name">
+            <input type="text" class="field-inp" id="f-name" placeholder="Guillaume Tremblay" autocomplete="name">
           </div>
           <div class="field-wrap">
             <label class="field-label">Adresse courriel</label>
@@ -1186,7 +1186,10 @@ input[type="range"]::-moz-range-thumb {
           </div>
           <div class="field-wrap">
             <label class="field-label">Numéro de téléphone</label>
-            <input type="tel"   class="field-inp" id="f-phone" placeholder="(514) 555-0123" autocomplete="tel">
+            <input type="tel" class="field-inp" id="f-phone" placeholder="(514) 555-0123" autocomplete="tel">
+            <p style="font-size:13px;color:var(--white);background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.3);border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;align-items:center;gap:7px;font-weight:500;">
+              📱 Le rapport de vos résultats sera envoyé par message texte à ce numéro
+            </p>
           </div>
         </div>
 
@@ -1195,6 +1198,7 @@ input[type="range"]::-moz-range-thumb {
         </button>
 
         <p class="privacy">🔒 Vos informations sont confidentielles et ne seront jamais revendues</p>
+        <p class="privacy" style="margin-top:6px;">En cliquant sur révéler mes résultats, vous autorisez qu'un conseiller vous contacte par téléphone, courriel ou message texte.</p>
       </div>
 
       <!-- BREAKDOWN (revealed) -->
@@ -1512,6 +1516,12 @@ function calculate() {
   const sal    = S.salary || 0;
   const q1     = S.q1 || 'autonome';
 
+  // 🔍 DIAGNOSTIC — visible dans F12 > Console
+  console.log('📊 Calcul lancé avec:', {
+    statut: q1, revenu: rev, dépenses: exp,
+    profit_net: profit, salaire: sal
+  });
+
   /* ─────────────────────────────────────────────────────────
      FORMULE SELON STATUT JURIDIQUE
 
@@ -1550,6 +1560,9 @@ function calculate() {
   /* ── Fourchette ±17% arrondie aux 500$ les plus proches ── */
   const low  = Math.round(savings * 0.83 / 500) * 500;
   const high = Math.round(savings * 1.17 / 500) * 500;
+
+  // 🔍 DIAGNOSTIC — résultat final
+  console.log('💰 Résultat:', { savings, low, high, opt1, opt2, opt3 });
 
   // Stocker
   window._calc = { savings, low, high, opt1, opt2, opt3, profit, q1 };
